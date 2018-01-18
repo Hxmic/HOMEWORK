@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>家庭作业</title>
+	<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+	<style>
+		.setInfo{
+			margin-left: 55px;
+		}
+		.setInfoOffset{
+			margin-left: 10px;
+		}
+		.setInfoInfo{
+			margin-left: 15px;
+		}
+		.pos{
+			position: relative;
+			margin-top: 10px;
+		}
+	</style>
+</head>
+<body>
+
+	
+	<div style="width: 80%;margin: 0 auto">
+		<div id="head">
+			<div class="pos">
+				<a href="https://github.com/Hxmic/HOMEWORK" target="_blank">gitHub地址</a>
+			</div>
+			<div class="pos">
+				<label for="aircraftId">无人机ID:</label>
+				<input type="text" id="aircraftId" />
+			</div>
+			<div class="pos mleft">
+				<div class="setInfo"> 
+					<label for="aircraftx">X:</label>
+					<input type="text" id="aircraftx" />
+				</div>
+
+				<div class="setInfo"> 
+					<label for="aircrafty">Y:</label>
+					<input type="text" id="aircrafty" />
+				</div>
+
+				<div class="setInfo"> 
+					<label for="aircraftz">Z:</label>
+					<input type="text" id="aircraftz" />
+				</div>
+			</div>
+			<div class="pos">
+				<div class="setInfoOffset"> 
+					<label for="aircraftOffsetx">offsetX:</label>
+					<input type="text" id="aircraftOffsetx" />
+				</div>
+				
+				<div class="setInfoOffset">
+					<label for="aircraftOffsety">offsetY:</label>
+					<input type="text" id="aircraftOffsety" />
+				</div>
+
+				<div class="setInfoOffset"> 
+					<label for="aircraftOffsetz">offsetZ:</label>
+					<input type="text" id="aircraftOffsetz" />
+					<input type="button" value="添加" onclick="addAircraft()" />
+				</div>
+			</div>
+			
+			<div class="pos setInfoInfo">
+				<label for="infoSearch">消息ID:</label>
+				<input type="text" id="infoSearch" />
+				<input type="button" onclick="searchId()" value="指定消息ID" />
+			</div>
+
+		</div>
+	
+			<div style="margin: 50px auto;">
+				<table border="1" cellspacing="0" cellpadding="1" width="100%">
+					<thead>
+						<tr>
+							<th>消息序号</th>
+							<th>消息</th>
+							<th>当前坐标</th>
+							<th>状态</th>
+						</tr>
+					</thead>
+					<tbody id="data_tr">
+						
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+</body>
+
+<script>
+		
+
+		let [infoId,_html] = [0,""];
+		let regNumber = /\d+/; //验证0-9的任意数字最少出现1次。
+		let regString = /[a-zA-Z]+/; //验证大小写26个字母任意字母最少出现1次。
+		let trueArray = [],falseArray = [];
+		let currentUpArray = [];//存储上一个正常的无人机坐标
+		let flag=-3;//用于标记取出上一个正常的坐标
+		let rightInfo = [];
+		//定义添加无人机
+		let addAircraft = ()=>{
+			aircraftInfoId();
+			infoAddId();
+			_html +='</tr>';
+			$("#data_tr").html(_html);
+		}
+
+		//定义添加无人机ID
+		let aircraftInfoId =()=>{
+			_html +='<tr>'+
+			'<td>'+(infoId++)+'</td>';
+			
+		}
+
+		//添加消息序号-消息-当前坐标-状态
+		let infoAddId =()=>{
+			let aircraftId,aircraftx,aircrafty,aircraftz;//无人机的进入坐标
+			let aircraftxInt,aircraftyInt,aircraftzInt;//把无人机的进入坐标转化为int
+			let aircraftOffsetx,aircraftOffsety,aircraftOffsetz;//无人机的移动量
+			let str = "&nbsp;",strTrue= "正常",strFalse="故障";
+			let mark = false;//用户把正常、故障的推入数组的推入数组
+			let inArray = [];//无人机进入的坐标
+			let currentX,currentY,currentZ;
+			aircraftId = $("#aircraftId").val();
+			aircraftx = $("#aircraftx").val();
+			aircrafty = $("#aircrafty").val();
+			aircraftz = $("#aircraftz").val();
+
+			aircraftxInt = parseInt(aircraftx);
+			aircraftyInt = parseInt(aircrafty);
+			aircraftzInt = parseInt(aircraftz);
+
+			aircraftOffsetx = $("#aircraftOffsetx").val();
+			aircraftOffsety = $("#aircraftOffsety").val();
+			aircraftOffsetz = $("#aircraftOffsetz").val();
+
+			aircraftOffsetxInt = parseInt(aircraftOffsetx);
+			aircraftOffsetyInt = parseInt(aircraftOffsety);
+			aircraftOffsetzInt = parseInt(aircraftOffsetz);
+
+			_html +='<td>'+aircraftId+str+aircraftx+str+aircrafty+str+aircraftz;
+
+			//用户判断无人机ID是否同时含有数字和字母
+			if(!(regNumber.test(aircraftId)&&regString.test(aircraftId))){
+				_html +='</td><td>(Na,Na,Na)</td>'+
+				'<td>'+strFalse+'</td>';
+			}else {
+				//用于判读x,y,z不为空，并且只能为数字
+				if(isNaN(aircraftx)||isNaN(aircrafty)||isNaN(aircraftz)||aircraftx==""||aircrafty==""||aircraftz=="" ){
+					_html +='</td><td>(Na,Na,Na)</td>'+
+					'<td>'+strFalse+'</td>';
+					
+				}else {
+					//用于添加无人机的移动量
+					_html +=str+aircraftOffsetx+str+aircraftOffsety+str+aircraftOffsetz+'</td>'
+					if(aircraftOffsetz == "" || aircraftOffsetx =="" ||aircraftOffsety==""){
+						aircraftOffsetz=0;
+						aircraftOffsety=0;
+						aircraftOffsetx=0;
+					}
+					//当前坐标转化为int
+					currentX = parseInt(aircraftx)+parseInt(aircraftOffsetx);
+					currentY = parseInt(aircrafty)+parseInt(aircraftOffsety);
+					currentZ = parseInt(aircraftz)+parseInt(aircraftOffsetz);
+
+					//把进入的变量存储
+					inArray.push(aircraftxInt);
+					inArray.push(aircraftyInt);
+					inArray.push(aircraftzInt);
+					//把上一个当前变量存储
+					currentUpArray.push(currentX);
+					currentUpArray.push(currentY);
+					currentUpArray.push(currentZ);
+
+					//用于判断消息序号为0是，没有移动量
+					if((infoId-1)==0){
+						if(aircraftOffsetx != ''|| aircraftOffsety != '' || aircraftOffsetz!=''){
+							_html +=str+aircraftOffsetx+str+aircraftOffsety+str+aircraftOffsetz+'</td>'+
+							'<td>(Na,Na,Na)</td>'+
+							'<td>'+strFalse+'</td>';
+						}else {
+
+							_html +=str+aircraftOffsetx+str+aircraftOffsety+str+aircraftOffsetz+'</td>'
+							_html+='<td>('+currentX+','+currentY+','+currentZ+')</td>'+
+									'<td>'+strTrue+'</td>';
+									mark = true;
+						}
+					}else{
+							//用户判断offsetx，offsety，offsetz只能为数字，并且不可以为空
+							if(isNaN(aircraftOffsetx)||isNaN(aircraftOffsety)||isNaN(aircraftOffsetz)||aircraftOffsetx == ''|| aircraftOffsety == '' || aircraftOffsetz==''){
+								_html +=
+								'<td>(Na,Na,Na)</td>'+
+								'<td>'+strFalse+'</td>';
+
+							}else {
+								if(compare(inArray,currentUpArray)){
+									_html+='</td><td>('+currentX+','+currentY+','+currentZ+')</td>'+
+									'<td>'+strTrue+'</td>';
+									mark = true;
+								}else{
+									_html +='</td><td>(Na,Na,Na)</td>'+
+									'<td>'+strFalse+'</td>';
+								}
+							}
+					}
+				}
+			}
+			//把正常和非正常的存入数组
+			if(mark){
+				trueArray.push((infoId-1));
+				rightInfo.push(aircraftId);
+				rightInfo.push((infoId-1));
+				rightInfo.push(currentX);
+				rightInfo.push(currentY);
+				rightInfo.push(currentZ);
+				
+
+			}else{
+				falseArray.push((infoId-1))
+			}
+		}
+
+		//用于判断上一个坐标和下一个左边的对比
+		let compare=(inAir,currentUpAir)=>{
+			let len = currentUpAir.length;
+			let current=[];
+			if(infoId<=1){
+				current = currentUpAir.slice(0, 3)
+			}else {
+				current = currentUpAir.slice(flag+=3,len-3);	
+			}
+			return (inAir.toString()==current.toString());
+		}
+
+		//调用指定消息ID
+		let searchId = ()=>{
+			let infoSearchId = $("#infoSearch").val();
+			let infoSearchIdInt = parseInt(infoSearchId);
+			let infoIdInt = parseInt(infoId-1)
+			
+			if(infoSearchIdInt>infoIdInt){
+				alert("Cannot find "+infoSearchId)
+				console.log("Cannot find "+infoSearchId);
+			}else {
+				let str = '当指定消息ID为'+infoSearchId+'应输出';
+				if(contains(trueArray,infoSearchId)){
+					if(infoSearchIdInt == 0){
+						alert(str+rightInfo.slice(0, 5).join(' '))
+						console.log(str+rightInfo.slice(0, 5).join(' '))
+					}else {
+						alert(str+rightInfo.slice(infoSearchIdInt*5, infoSearchIdInt*5+5).join(' '));
+						console.log(str+rightInfo.slice(infoSearchIdInt*5, infoSearchIdInt*5+5).join(' '));
+					}
+					
+
+				}else {
+					alert(str+"Error: "+infoSearchId);
+					console.log(str+"Error: "+infoSearchId);
+				}
+			}
+		}
+		//判断某个元素是否在数组中
+		let contains=(arr,obj)=>{
+			let i = arr.length;
+			while (i--) {
+				if(arr[i]==obj){
+					return true;
+				}	
+			}
+			return false;
+		}
+
+	</script>
+</html>
