@@ -3,7 +3,7 @@ ThoughtWorks-HomeWork
 
 # 作业是完成之后上传的
 
-## 1.引入的百度的jquery CDN 需要在联网的条件下运行，在网页中打开（Chrome/Firefox/IE/等）
+## 1.引入的官方的jquery CDN 需要在联网的条件下运行，在网页中打开（Chrome/Firefox/IE/等）（百度的）
 
 # 一、测试 规则一
 
